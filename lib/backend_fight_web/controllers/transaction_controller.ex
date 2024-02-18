@@ -5,29 +5,18 @@ defmodule BackendFightWeb.TransactionController do
 
   action_fallback BackendFightWeb.FallbackController
 
-  def create(conn, %{
-        "customer_id" => customer_id,
-        "descricao" => descricao,
-        "tipo" => tipo,
-        "valor" => valor
-      }) do
-    transaction_params = %{description: descricao, type: tipo, value: valor}
-
-    with %{total: total, limite: limite} = _customer_data <- do_create(customer_id, transaction_params) do
+  def create(conn, %{"customer_id" => customer_id} = params) do
+    with {:ok, transaction_params} <- Bank.parse_params(params),
+         %{balance: _total, limit: _limite} = customer_data <-
+           Bank.create_transaction(customer_id, transaction_params) do
       conn
       # yes, that's by the spec 😨
       |> put_status(:ok)
-      |> render(:show, customer: %{limit: limite, balance: total})
+      |> render(:show, customer: customer_data)
     end
   end
 
   def create(_conn, _params) do
     {:error, :unprocessable_entity}
-  end
-
-  def do_create(customer_id, transaction_params) do
-    Fly.RPC.rpc_primary(fn ->
-      Bank.create_transaction_and_return_customer(%{id: customer_id}, transaction_params)
-    end)
   end
 end

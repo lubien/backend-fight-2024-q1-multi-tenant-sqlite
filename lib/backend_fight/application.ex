@@ -7,22 +7,26 @@ defmodule BackendFight.Application do
 
   @impl true
   def start(_type, _args) do
+    first_chilren = [
+      {Fly.RPC, []},
+      {Task.Supervisor, name: BackendFight.QuerySupervisor},
+    ]
+
     extra_children =
       if Fly.RPC.is_primary?() do
         [
-          BackendFight.Repo,
-          {Ecto.Migrator,
-           repos: Application.fetch_env!(:backend_fight, :ecto_repos), skip: skip_migrations?()},
-          {BackendFight.CustomerCache, []},
-          {BackendFight.BackCollectorSupervisor, []}
+          Supervisor.child_spec({SqliteServer, [1, "Jonathan", 1_000 * 100]}, id: :customer_1),
+          Supervisor.child_spec({SqliteServer, [2, "Joseph", 800 * 100]}, id: :customer_2),
+          Supervisor.child_spec({SqliteServer, [3, "Jotaro", 10_000 * 100]}, id: :customer_3),
         ]
       else
-        []
+        [
+          Supervisor.child_spec({SqliteServer, [4, "Josuke", 100_000 * 100]}, id: :customer_4),
+          Supervisor.child_spec({SqliteServer, [5, "Giorno", 5_000 * 100]}, id: :customer_5),
+        ]
       end
 
-    children = [
-      {Cachex, name: :customer_cache},
-      {Fly.RPC, []},
+    children = first_chilren ++ extra_children ++ [
       {DNSCluster,
        resolver: BackendFight.DNSClusterResolver,
        query: Application.get_env(:backend_fight, :dns_cluster_query) || :ignore},
@@ -30,7 +34,7 @@ defmodule BackendFight.Application do
       # {BackendFight.Worker, arg},
       # Start to serve requests, typically the last entry
       BackendFightWeb.Endpoint
-    ] ++ extra_children
+    ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -44,10 +48,5 @@ defmodule BackendFight.Application do
   def config_change(changed, _new, removed) do
     BackendFightWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  defp skip_migrations?() do
-    # By default, sqlite migrations are run when using a release
-    System.get_env("MY_REGION") != "primary"
   end
 end

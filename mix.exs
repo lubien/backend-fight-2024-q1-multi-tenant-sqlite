@@ -43,9 +43,7 @@ defmodule BackendFight.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:fly_rpc, "~> 0.3.0"},
-      {:cachex, "~> 3.6"},
-      {:qex, "~> 0.5"},
-      {:bandit, "~> 1.2"}
+      {:bandit, git: "https://github.com/mtrudel/bandit.git", ref: "62314a59969be1093c627df8ee7a5d3facab0996", override: true}
     ]
   end
 
