@@ -55,9 +55,7 @@ services:
         ipv4_address: 192.0.1.12
   
   nginx:
-    image: nginx:latest
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    build: ./load_balancer
     depends_on:
       - rinha1
       - rinha2
@@ -70,6 +68,23 @@ services:
           memory: "147MB"
     networks:
       erlcluster:
+
+  # nginx:
+  #   image: nginx:latest
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - rinha1
+  #     - rinha2
+  #   ports:
+  #     - "9999:9999"
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.35"
+  #         memory: "147MB"
+  #   networks:
+  #     erlcluster:
 
 networks:
   erlcluster:

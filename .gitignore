@@ -29,3 +29,4 @@ backend_fight-*.tar
 *.db
 *.db-*
 
+load_balancer/target/*
